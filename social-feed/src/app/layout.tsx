@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import "../styles/globals.css"
+import "../../styles/globals.css"
 
 export const metadata: Metadata = {
-  title: "Social Feed",
+  title: "Socialites",
   description: "A dynamic social media feed built with Next.js, GraphQL, and Tailwind CSS",
 }
 
