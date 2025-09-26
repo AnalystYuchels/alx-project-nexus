@@ -1,92 +1,159 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 
-interface Comment {
-  id: string
-  text: string
-}
+type RawComment = {
+  id?: string | number;
+  author?: string;
+  avatar?: string;
+  text?: string;
+  createdAt?: string | Date;
+};
 
-interface Post {
-  id: string
-  author: string
-  avatar: string
-  content: string
-  likes: number
-  comments: Comment[]
-  createdAt: Date
-}
+type Comment = {
+  id: string;
+  author: string;
+  avatar: string;
+  text: string;
+  createdAt: Date;
+};
+
+type Post = {
+  id: string;
+  author?: string;
+  username?: string;
+  avatar?: string;
+  content: string;
+  likes?: number;
+  comments?: RawComment[];
+  createdAt?: string | Date;
+};
 
 export default function PostCard({ post }: { post: Post }) {
-  const [likes, setLikes] = useState(post.likes)
-  const [comments, setComments] = useState(post.comments)
-  const [commentInput, setCommentInput] = useState("")
+  // pick username field robustly
+  const displayName = post.author ?? post.username ?? "Unknown";
 
-  const handleLike = () => setLikes((prev) => prev + 1)
+  // post avatar fallback
+  const postAvatar = post.avatar ?? "/avatars/default.png";
 
-  const handleComment = () => {
-    if (!commentInput.trim()) return
-    const newComment = { id: Date.now().toString(), text: commentInput }
-    setComments([...comments, newComment])
-    setCommentInput("")
-  }
+  // normalize comments once on initial render (ensures createdAt is Date)
+  const [comments, setComments] = useState<Comment[]>(
+    (post.comments ?? []).map((c, idx) => ({
+      id: String(c.id ?? `${post.id}-c-${idx}`),
+      author: c.author ?? "Someone",
+      avatar: c.avatar ?? "/avatars/default.png",
+      text: c.text ?? "",
+      createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
+    }))
+  );
+
+  const [newComment, setNewComment] = useState("");
+
+  const addComment = () => {
+    const text = newComment.trim();
+    if (!text) return;
+
+    // generate a random-ish avatar for the commenter so it looks alive
+    const seed = Math.floor(Math.random() * 100000);
+    const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
+
+    const comment: Comment = {
+      id: String(Date.now()),
+      author: "You",
+      avatar: avatarUrl,
+      text,
+      createdAt: new Date(),
+    };
+
+    setComments((prev) => [comment, ...prev]);
+    setNewComment("");
+  };
+
+  const addLike = () => {
+    /* For local demo we keep likes in component state only */
+    // (If you later want to persist, wire to API)
+  };
 
   return (
-    <div className="bg-gray-50 rounded-xl shadow p-4">
+    <div className="bg-[#0A2540] shadow-lg rounded-2xl p-4 mb-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center mb-3">
         <img
-          src={post.avatar}
-          alt={post.author}
-          className="w-8 h-8 rounded-full"
+          src={postAvatar}
+          alt={displayName}
+          className="w-5 h-5 rounded-full mr-2 object-cover"
+          onError={(e) => ((e.target as HTMLImageElement).src = "/avatars/default.png")}
         />
         <div>
-          <p className="font-semibold text-gray-900">{post.author}</p>
-          <span className="text-xs text-gray-500">
-            {post.createdAt.toLocaleString()}
-          </span>
+          <p className="font-semibold text-pink-400 text-sm">{displayName}</p>
+          <p className="text-xs text-gray-400">
+            {post.createdAt ? new Date(post.createdAt).toLocaleString() : "Just now"}
+          </p>
         </div>
       </div>
 
       {/* Content */}
-      <p className="text-gray-800 mb-4">{post.content}</p>
+      <p className="text-white mb-3">{post.content}</p>
 
-      {/* Actions */}
-      <div className="flex gap-3 mb-4">
+      {/* Buttons (kept simple; like/share) */}
+      <div className="flex space-x-3 mb-4">
         <button
-          onClick={handleLike}
-          className="px-4 py-1 rounded-lg bg-[#1e3a8a] text-white text-sm hover:bg-blue-900 transition"
+          onClick={addLike}
+          className="bg-pink-500 text-white text-xs px-4 py-1 rounded-full hover:bg-pink-600 transition"
         >
-          👍 Like ({likes})
+          Like
         </button>
         <button
-          onClick={handleComment}
-          className="px-4 py-1 rounded-lg border-2 border-[#db2777] text-[#db2777] text-sm hover:bg-[#db2777] hover:text-white transition"
+          className="border border-pink-500 text-pink-500 text-xs px-4 py-1 rounded-full hover:bg-pink-500 hover:text-white transition"
+          // share action placeholder
+          onClick={() => navigator.clipboard?.writeText(window.location.href)}
         >
-          💬 Comment
+          Share
         </button>
       </div>
 
-      {/* Comment Input */}
-      <input
-        type="text"
-        placeholder="Write a comment..."
-        value={commentInput}
-        onChange={(e) => setCommentInput(e.target.value)}
-        className="w-full px-3 py-2 mb-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#db2777] text-gray-900 placeholder-gray-500"
-      />
+      {/* Comments list */}
+      <div>
+        <p className="text-sm font-medium text-gray-200 mb-2">Comments</p>
+        <div className="space-y-3">
+          {comments.map((c) => (
+            <div key={c.id} className="flex items-start space-x-2 bg-gray-900/30 p-2 rounded-lg">
+              <img
+                src={c.avatar}
+                alt={c.author}
+                className="w-5 h-5 rounded-full mt-1 object-cover"
+                onError={(e) => ((e.target as HTMLImageElement).src = "/avatars/default.png")}
+              />
+              <div>
+                <p className="text-xs font-semibold text-white">
+                  {c.author}{" "}
+                  <span className="text-gray-400 font-normal text-[11px]">
+                    {c.createdAt ? c.createdAt.toLocaleString() : "Just now"}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-200">{c.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* Comment List */}
-      <div className="space-y-2">
-        {comments.map((c) => (
-          <div
-            key={c.id}
-            className="text-sm text-gray-700 border-b border-gray-200 pb-1"
-          >
-            {c.text}
-          </div>
-        ))}
+      {/* Add comment */}
+      <div className="mt-4 flex items-center space-x-2">
+        <input
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addComment()}
+          placeholder="Write a comment..."
+          className="flex-1 text-sm px-3 py-1 rounded-full border border-gray-600 bg-[#0F2A4D] text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-pink-400"
+        />
+        <button
+          onClick={addComment}
+          className="bg-pink-500 text-white text-xs px-3 py-1 rounded-full hover:bg-pink-600 transition"
+        >
+          Post
+        </button>
       </div>
     </div>
-  )
+  );
 }
