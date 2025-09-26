@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
-const GRAPHQL_ENDPOINT = 'https://graphqlzero.almansi.me/api'; // public placeholder
+const GRAPHQL_ENDPOINT = 'https://graphqlzero.almansi.me/api';
 
 const client = new ApolloClient({
   link: new HttpLink({ uri: GRAPHQL_ENDPOINT }),
@@ -10,7 +10,10 @@ const client = new ApolloClient({
         fields: {
           posts: {
             keyArgs: false,
-            merge(existing = { data: [] }, incoming: { data: any[] }) {
+            merge(
+              existing: { data: Array<Record<string, unknown>> } = { data: [] },
+              incoming: { data: Array<Record<string, unknown>> }
+            ) {
               return {
                 ...incoming,
                 data: [...(existing.data || []), ...(incoming.data || [])],

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 type RawComment = {
   id?: string | number;
@@ -30,13 +31,9 @@ type Post = {
 };
 
 export default function PostCard({ post }: { post: Post }) {
-  // pick username field robustly
   const displayName = post.author ?? post.username ?? "Unknown";
-
-  // post avatar fallback
   const postAvatar = post.avatar ?? "/avatars/default.png";
 
-  // normalize comments once on initial render (ensures createdAt is Date)
   const [comments, setComments] = useState<Comment[]>(
     (post.comments ?? []).map((c, idx) => ({
       id: String(c.id ?? `${post.id}-c-${idx}`),
@@ -52,11 +49,8 @@ export default function PostCard({ post }: { post: Post }) {
   const addComment = () => {
     const text = newComment.trim();
     if (!text) return;
-
-    // generate a random-ish avatar for the commenter so it looks alive
     const seed = Math.floor(Math.random() * 100000);
     const avatarUrl = `https://i.pravatar.cc/150?u=${seed}`;
-
     const comment: Comment = {
       id: String(Date.now()),
       author: "You",
@@ -64,25 +58,20 @@ export default function PostCard({ post }: { post: Post }) {
       text,
       createdAt: new Date(),
     };
-
     setComments((prev) => [comment, ...prev]);
     setNewComment("");
-  };
-
-  const addLike = () => {
-    /* For local demo we keep likes in component state only */
-    // (If you later want to persist, wire to API)
   };
 
   return (
     <div className="bg-[#0A2540] shadow-lg rounded-2xl p-4 mb-6">
       {/* Header */}
       <div className="flex items-center mb-3">
-        <img
+        <Image
           src={postAvatar}
           alt={displayName}
-          className="w-5 h-5 rounded-full mr-2 object-cover"
-          onError={(e) => ((e.target as HTMLImageElement).src = "/avatars/default.png")}
+          width={20}
+          height={20}
+          className="rounded-full mr-2 object-cover"
         />
         <div>
           <p className="font-semibold text-pink-400 text-sm">{displayName}</p>
@@ -95,34 +84,31 @@ export default function PostCard({ post }: { post: Post }) {
       {/* Content */}
       <p className="text-white mb-3">{post.content}</p>
 
-      {/* Buttons (kept simple; like/share) */}
+      {/* Buttons */}
       <div className="flex space-x-3 mb-4">
-        <button
-          onClick={addLike}
-          className="bg-pink-500 text-white text-xs px-4 py-1 rounded-full hover:bg-pink-600 transition"
-        >
+        <button className="bg-pink-500 text-white text-xs px-4 py-1 rounded-full hover:bg-pink-600 transition">
           Like
         </button>
         <button
           className="border border-pink-500 text-pink-500 text-xs px-4 py-1 rounded-full hover:bg-pink-500 hover:text-white transition"
-          // share action placeholder
           onClick={() => navigator.clipboard?.writeText(window.location.href)}
         >
           Share
         </button>
       </div>
 
-      {/* Comments list */}
+      {/* Comments */}
       <div>
         <p className="text-sm font-medium text-gray-200 mb-2">Comments</p>
         <div className="space-y-3">
           {comments.map((c) => (
             <div key={c.id} className="flex items-start space-x-2 bg-gray-900/30 p-2 rounded-lg">
-              <img
+              <Image
                 src={c.avatar}
                 alt={c.author}
-                className="w-5 h-5 rounded-full mt-1 object-cover"
-                onError={(e) => ((e.target as HTMLImageElement).src = "/avatars/default.png")}
+                width={20}
+                height={20}
+                className="rounded-full mt-1 object-cover"
               />
               <div>
                 <p className="text-xs font-semibold text-white">
