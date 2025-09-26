@@ -1,10 +1,19 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{ts,tsx,js,jsx}",
-    "./pages/**/*.{ts,tsx,js,jsx}",
-    "./components/**/*.{ts,tsx,js,jsx}"
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
   ],
-  theme: { extend: {} },
+  theme: {
+    extend: {
+      colors: {
+        deepblue: "#1e3a8a", // Deep Blue
+        softpink: "#db2777", // Accessible Pink
+      },
+      fontFamily: {
+        sans: ["Quicksand", "sans-serif"],
+      },
+    },
+  },
   plugins: [],
 }
